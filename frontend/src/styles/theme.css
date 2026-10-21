@@ -1,0 +1,503 @@
+/* ============================================================
+   全局主题美化层 —— 在 element-plus 默认样式之后加载
+   只做视觉增强（渐变 / 阴影 / 圆角 / 过渡 / 动效），不改布局
+   ============================================================ */
+
+:root {
+  --brand-start: #3f8cff;
+  --brand-end: #6c63ff;
+  --brand-cyan: #5ad7ff;
+  --brand-grad: linear-gradient(135deg, #3f8cff 0%, #6c63ff 100%);
+  --brand-grad-soft: linear-gradient(135deg, rgba(63, 140, 255, 0.12), rgba(108, 99, 255, 0.12));
+  --ring-focus: 0 0 0 4px rgba(95, 138, 255, 0.16);
+
+  /* 外壳（顶栏 / 内容区）共用的中性色与节奏。
+     深色侧栏那套配色只在 AppAside 里用，收在它自己的 scoped 样式里，不往这放。
+     左右留白统一走 --content-gutter，这样标题、表格首列、卡片左边缘永远在同一条竖线上 */
+  --line: #e6ebf5;
+  --content-gutter: 18px;
+}
+
+/* 平滑滚动条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(108, 99, 255, 0.35) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(63, 140, 255, 0.5), rgba(108, 99, 255, 0.5));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(63, 140, 255, 0.8), rgba(108, 99, 255, 0.8));
+  background-clip: content-box;
+}
+
+/* ---------- Element Plus 的 el-scrollbar（表格、下拉等用的自绘滚动条）----------
+   上面那套 *::-webkit-scrollbar 对它【无效】—— el-scrollbar 是个自己画的 div，
+   不归浏览器原生滚动条管，必须用下面这几个类名。
+
+   这里做两件事：
+
+   1) 粗细 9px、滑块提到 .45 不透明度。原来是 6px + opacity .3，又细又淡。
+      注意滑块默认带 opacity: .3，光改 background 是盖不住的，opacity 要一起覆盖。
+
+   2) 横向那条从「浮在表格上」改成「排在表格下面」。它原本是
+      position: absolute; bottom: 2px —— 不占布局位置，所以必然盖住最后一行的下半截；
+      6px 时看不出来，加粗之后就明显了。改成 static 之后它落在行下面、占自己的高度，
+      上面加一条分隔线，明确它是表格外面的一条控件。 */
+.el-scrollbar__bar { background: #f4f7fc; border-radius: 0; }
+.el-scrollbar__bar.is-horizontal {
+  position: static;
+  height: 12px;
+  border-top: 1px solid var(--line);
+}
+.el-scrollbar__bar.is-vertical { width: 12px; }
+.el-scrollbar__thumb {
+  opacity: 1;
+  background-color: rgba(99, 122, 165, 0.45);
+}
+.el-scrollbar__thumb:hover {
+  opacity: 1;
+  background-color: rgba(99, 122, 165, 0.7);
+}
+/* el-scrollbar 默认「悬停才显示」—— 可宽表格要滚的时候，不悬停就看不见它在哪。
+   el-table 横向溢出时会给自己加 el-table--scrollable-x，正好拿来当开关：
+   只有真的溢出才常显，放得下的表格底下不会多出一条空轨道 */
+.el-table--scrollable-x .el-scrollbar__bar.is-horizontal { display: block !important; }
+
+/* ---------- 按钮 ---------- */
+.el-button {
+  border-radius: 12px;
+  font-weight: 600;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+}
+.el-button:hover {
+  transform: translateY(-2px);
+}
+.el-button:active {
+  transform: translateY(0);
+}
+
+/* 主按钮：品牌渐变 + 光感 */
+.el-button--primary {
+  border: none;
+  background: var(--brand-grad);
+  /* box-shadow: 0 8px 18px rgba(63, 140, 255, 0.32); */
+  position: relative;
+  overflow: hidden;
+}
+.el-button--primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+}
+.el-button--primary:hover {
+  box-shadow: 0 14px 26px rgba(63, 140, 255, 0.44);
+}
+.el-button--primary:hover::after {
+  left: 130%;
+}
+
+/* 次要按钮：轻玻璃感 */
+.el-button--default {
+  border-color: rgba(99, 122, 165, 0.28);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(6px);
+}
+.el-button--default:hover {
+  border-color: var(--brand-start);
+  color: var(--brand-start);
+  box-shadow: 0 8px 18px rgba(63, 140, 255, 0.16);
+}
+
+/* 文本 / 链接按钮 hover 不位移，仅提亮 */
+.el-button.is-link:hover,
+.el-button.is-text:hover {
+  font-style: white;
+  transform: none;
+  opacity: 0.82;
+}
+
+/* ---------- 输入框 / 选择器 / 日期选择 ---------- */
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  border-radius: 12px !important;
+  box-shadow: 0 0 0 1px rgba(87, 104, 133, 0.14) inset !important;
+  transition: box-shadow 0.22s ease, background 0.22s ease;
+}
+.el-input__wrapper:hover,
+.el-select__wrapper:hover {
+  box-shadow: 0 0 0 1px rgba(63, 140, 255, 0.45) inset !important;
+}
+.el-input__wrapper.is-focus,
+.el-textarea__inner:focus,
+.el-select__wrapper.is-focused {
+  box-shadow: 0 0 0 1px rgba(74, 106, 255, 0.85) inset, var(--ring-focus) !important;
+}
+
+/* ---------- 标签 tag ---------- */
+.el-tag {
+  border-radius: 10px;
+  border: none;
+  font-weight: 500;
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
+}
+.el-tag:hover {
+  transform: translateY(-1px);
+}
+.el-tag.el-tag--info {
+  background: var(--brand-grad-soft);
+  color: #4a5b8a;
+}
+.el-tag .el-tag__close {
+  color: inherit;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.el-tag .el-tag__close:hover {
+  transform: rotate(90deg);
+  background: rgba(108, 99, 255, 0.25);
+  color: #fff;
+}
+
+/* ---------- 遮罩层：更柔和的模糊 ---------- */
+.el-overlay {
+  background: rgba(10, 18, 38, 0.42);
+  backdrop-filter: blur(6px);
+}
+
+/* ---------- 对话框（高级搜索弹窗核心美化）---------- */
+.el-dialog {
+  border-radius: 22px !important;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 30px 80px rgba(15, 26, 54, 0.32);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9ff 100%);
+  padding: 0;
+}
+/* 顶部标题栏：白底 + 左侧一道品牌色竖条。
+   原来是整条品牌渐变（#3f8cff → #6c63ff）再压一层白色高光 —— 在「填表」为主的
+   弹窗里那块最扎眼，一开窗视线先被彩带拉走。现在底色退成白的，
+   品牌只留在标题左边那一小道竖条上，和页面里 .panel-title 的竖条是同一套语言。
+   左边多点内边距是给竖条让位（竖条 18px 起、4px 宽，标题 32px 起） */
+.el-dialog__header {
+  margin: 0;
+  padding: 20px 26px 20px 32px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.el-dialog__header::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  width: 4px;
+  height: 20px;
+  transform: translateY(-50%);
+  border-radius: 3px;
+  background: var(--brand-grad);
+}
+/* 原来那层白色高光是给渐变底打的，白底上不需要 */
+.el-dialog__header::after {
+  display: none;
+}
+.el-dialog__title {
+  color: #17233d !important;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-shadow: none;
+}
+.el-dialog__headerbtn {
+  top: 18px;
+  right: 18px;
+}
+.el-dialog__headerbtn .el-dialog__close {
+  color: #8a95b0;
+  font-size: 20px;
+  transition: transform 0.25s ease, color 0.2s ease;
+}
+.el-dialog__headerbtn:hover .el-dialog__close {
+  color: #2563eb;
+  transform: rotate(90deg);
+}
+.el-dialog__body {
+  padding: 24px 26px 8px;
+  color: #3b465f;
+}
+.el-dialog__footer {
+  padding: 12px 26px 22px;
+}
+
+/* 弹窗淡入 + 轻微上浮 */
+.dialog-fade-enter-active .el-dialog {
+  animation: dialogPopIn 0.34s cubic-bezier(0.34, 1.4, 0.5, 1) both;
+}
+@keyframes dialogPopIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------- 消息弹窗 MessageBox（confirm / alert，全局统一风格）----------
+   与 .el-dialog 同一套品牌视觉：圆角 + 渐变标题栏 + 柔和底。
+   所有 ElMessageBox 自动套用，无需逐处传样式 */
+.el-message-box {
+  border-radius: 20px;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 30px 80px rgba(15, 26, 54, 0.32);
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9ff 100%);
+}
+.el-message-box__header {
+  margin: 0;
+  padding: 18px 24px;
+  background: var(--brand-grad);
+  position: relative;
+}
+.el-message-box__header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 90% -30%, rgba(255, 255, 255, 0.35), transparent 40%);
+  pointer-events: none;
+}
+.el-message-box__title {
+  color: #fff !important;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.el-message-box__headerbtn {
+  top: 16px;
+  right: 16px;
+}
+.el-message-box__headerbtn .el-message-box__close {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 18px;
+  transition: transform 0.25s ease, color 0.2s ease;
+}
+.el-message-box__headerbtn:hover .el-message-box__close {
+  color: #fff;
+  transform: rotate(90deg);
+}
+.el-message-box__content {
+  position: relative;
+  padding: 22px 24px 8px;
+  color: #3b465f;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+/* type 状态图标（warning/error 等）默认在正文左侧、挤得正文右移。
+   挪到正文右上角，正文整体恢复左对齐，读起来更顺 */
+.el-message-box__status {
+  position: absolute !important;
+  top: 18px;
+  right: 20px;
+  left: auto !important;
+  transform: none !important;
+  font-size: 22px !important;
+}
+.el-message-box__status + .el-message-box__message {
+  padding-left: 0 !important;
+  padding-right: 32px;
+}
+.el-message-box__btns {
+  padding: 12px 24px 22px;
+  gap: 10px;
+}
+.el-message-box__btns .el-button {
+  padding: 9px 20px;
+}
+/* 弹入动画，与 dialog 一致的上浮质感 */
+.msgbox-fade-enter-active .el-message-box {
+  animation: dialogPopIn 0.32s cubic-bezier(0.34, 1.4, 0.5, 1) both;
+}
+
+/* 富文本确认弹窗正文（sync-confirm-box 及后续同类弹窗复用）*/
+.el-message-box .mb-lead {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: #2b3654;
+}
+.el-message-box .mb-lead b {
+  color: var(--brand-start);
+}
+.el-message-box .mb-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #6a7590;
+}
+.el-message-box .mb-sub b {
+  color: #c9701a;
+}
+/* 生产库全量写：醒目警示块 */
+.el-message-box .mb-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 154, 60, 0.12);
+  border: 1px solid rgba(255, 154, 60, 0.3);
+  color: #b5620f;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.el-message-box .mb-alert b {
+  color: #d9480f;
+}
+.el-message-box .mb-alert-ico {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+/* 学校日志导出确认框：正文里已有 mb-alert 的 ⚠️，Element 右上角的 type 状态图标显得重复，
+   隐藏它并取消给正文预留的右侧空位 */
+.utility-export-confirm .el-message-box__status {
+  display: none;
+}
+.utility-export-confirm .el-message-box__status + .el-message-box__message {
+  padding-right: 0;
+}
+
+/* 表单项标签更清晰，输入项入场轻微错落 */
+.el-dialog .el-form-item__label {
+  font-weight: 600;
+  color: #4a5573;
+}
+.el-dialog .el-form-item {
+  margin-bottom: 20px;
+}
+
+/* ---------- 抽屉 drawer ---------- */
+.el-drawer {
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  overflow: hidden;
+}
+.el-drawer__header {
+  margin: 0;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(13, 25, 52, 0.96), rgba(32, 66, 140, 0.92));
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.el-drawer__header .el-drawer__close-btn {
+  color: rgba(255, 255, 255, 0.85);
+  transition: transform 0.25s ease, color 0.2s ease;
+}
+.el-drawer__header .el-drawer__close-btn:hover {
+  color: #fff;
+  transform: rotate(90deg);
+}
+.el-drawer__body {
+  padding: 22px 24px;
+}
+
+/* ---------- 表格：呈现数据的核心 ----------
+   形态对齐效果图：表格直接通铺到内容区两边，没有外框、没有圆角。
+   （原来那圈外框是 Element Plus 用几个伪元素画的直线，配上 16px 圆角后
+   在四个角会被裁断 —— 顶边没线、左边框也进不了圆角，加上表头本身很浅，
+   四个角看着就是「泛白、说不清从哪儿开始」。整圈不要反而干净） */
+.el-table {
+  box-sizing: border-box;
+  --el-table-border-color: rgba(99, 122, 165, 0.14);
+}
+/* 外框那三条直线：左 ::before、右 --border::after、下 inner-wrapper::after
+   （顶边压根没有）。通铺之后一条都不要 */
+.el-table::before,
+.el-table--border::after,
+.el-table--border .el-table__inner-wrapper::after { display: none; }
+/* 最后一行不画分隔线：外框都去了，底下再留一条线就成了孤零零的一横 */
+.el-table__body tr:last-child > td.el-table__cell { border-bottom: none; }
+/* 表头：渐变底 + 加重字色 */
+.el-table th.el-table__cell {
+  background: linear-gradient(180deg, #eef3ff, #e7edfb) !important;
+  color: #2b3654 !important;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+/* 行 hover：极浅的蓝灰，只作「鼠标指着这一行」的提示。
+   这里原来是 rgba(63, 140, 255, 1) —— 第四个值是 alpha，等于 1 就是整行实心品牌蓝。
+   而表格里的操作按钮是 Element Plus 的 link + type="primary"（#409eff），
+   蓝字压蓝底后对比度只剩 1.18，鼠标移上去正要点击的瞬间反而看不见按钮；
+   单元格正文也掉到 2.77（低于 AA 的 4.5）。换掉之后正文回到 8.55。
+   这条是全局规则，账号数据 / 日志数据 / 禁用列表 / 审核记录 / 数据交付记录 / 学校列表都吃它 */
+.el-table__body tr:hover > td.el-table__cell {
+  background: #f5f8ff !important;
+}
+.el-table__body tr {
+  transition: background 0.2s ease;
+}
+/* 斑马纹：压到几乎看不见，只留一点点行与行的区分 */
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background: #fcfdff;
+}
+/* 单元格文字 */
+.el-table .cell {
+  color: #3d4864;
+}
+
+/* ---------- 分页 ---------- */
+.el-pagination.is-background .el-pager li {
+  border-radius: 10px;
+  transition: transform 0.18s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.el-pagination.is-background .el-pager li:hover:not(.is-active) {
+  transform: translateY(-2px);
+  color: var(--brand-start);
+}
+.el-pagination.is-background .el-pager li.is-active {
+  background: var(--brand-grad) !important;
+  box-shadow: 0 8px 16px rgba(63, 140, 255, 0.34);
+}
+.el-pagination.is-background .btn-prev,
+.el-pagination.is-background .btn-next {
+  border-radius: 10px;
+  transition: transform 0.18s ease, color 0.2s ease;
+}
+.el-pagination.is-background .btn-prev:hover,
+.el-pagination.is-background .btn-next:hover {
+  transform: translateY(-2px);
+  color: var(--brand-start);
+}
+
+/* ---------- 卡片 ---------- */
+.el-card {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+/* ---------- 提示 alert ---------- */
+.el-alert {
+  border-radius: 14px;
+}
+
+/* ---------- 加载遮罩色调 ---------- */
+.el-loading-mask {
+  background: rgba(247, 249, 253, 0.72);
+  backdrop-filter: blur(2px);
+}
+.el-loading-spinner .path {
+  stroke: var(--brand-start);
+}
+
+/* ---------- 下拉选项 hover ---------- */
+.el-select-dropdown__item.is-hovering,
+.el-select-dropdown__item:hover {
+  background: var(--brand-grad-soft);
+  color: var(--brand-start);
+  border-radius: 8px;
+}

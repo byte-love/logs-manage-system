@@ -1,0 +1,50 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: logs-manage-system
+  data:
+    mongodb:
+      uri: mongodb://127.0.0.1:27017/DataHub_Log
+
+datahub:
+  uri: mongodb://root:change_me@203.0.113.10:27017/DataHub?authSource=admin
+  # register 同步：源 SQL Server 配置
+  # 注意：DataHub_SYS 库（小程序申请表）走下面独立的顶层 datahubsys 前缀，
+  # 不放在 datahub 下 —— 复刻 datahub 那套已验证的无参 @ConfigurationProperties 模式，
+  # 带 @Value 参数的 @Bean 会因 CGLIB 拦截差异注入到错误的 MongoProperties。
+  registerSql:
+    url: jdbc:sqlserver://203.0.113.11:1433;databaseName=DataHub_SYS;responseBuffering=adaptive
+    user: sa
+    password: change_me
+  # OSS 配置（文件上传）
+  oss:
+    endpoint: http://oss-cn-shanghai.aliyuncs.com
+    accessKeyId: AKIDEXAMPLE000000000
+    accessKeySecret: SECRETEXAMPLE0000000000
+    bucketName: datahub-statics
+
+# 139 的 DataHub_SYS 库，只读小程序申请表 register_xiaochengxu（审核记录跨库合并用）。
+# 独立顶层前缀，与 datahub 同构，走无参 @ConfigurationProperties。
+datahubsys:
+  uri: mongodb://root:change_me@203.0.113.10:27017/DataHub_SYS?authSource=admin
+
+# DemoText（demotext）那台生产 Mongo：节假日公告备份的落点（holiday_tip 单行文档）。
+# 独立顶层前缀，同样走无参 @ConfigurationProperties。
+# serverSelectionTimeoutMS 是给界面加的保护：这台在公网，读备份状态失败时要在几秒内返回，
+# 不能让节假日公告页卡在默认的 30s 上（公告本身在 cas，备份读不到不该拖住页面）。
+demotext:
+  uri: mongodb://root:change_me@203.0.113.12:30000/demotext?authSource=admin&serverSelectionTimeoutMS=5000&connectTimeoutMS=5000
+
+
+logging:
+  level:
+    com.logsmanage: debug
+
+app:
+  init-admin:
+    enabled: true
+    username: admin
+    password: 123456
+    display-name: 系统管理员
